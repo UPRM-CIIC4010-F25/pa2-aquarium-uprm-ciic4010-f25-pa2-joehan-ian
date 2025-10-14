@@ -3,6 +3,12 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 
+    music.load("Underwater Exploration - Godmode.mp3");
+    if (music.isLoaded()){ //only plays it if its loaded to avoid errors
+        music.setLoop(true);
+        music.play();
+    }
+
     ofSetFrameRate(60);
     ofSetBackgroundColor(ofColor::blue);
     backgroundImage.load("background.png");
