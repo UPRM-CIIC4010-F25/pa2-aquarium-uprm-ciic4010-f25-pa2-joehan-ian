@@ -97,6 +97,11 @@ public:
     void setSprite(std::shared_ptr<GameSprite> sprite) { m_sprite = std::move(sprite); }
     int getValue() const { return m_value; }
 
+    void setPosition(float x, float y){ // change by joehan: is a function setter of the class creature
+        m_x = x;
+        m_y = y;
+    }
+
     void setBounds(int w, int h);
     void normalize();
     void bounce();

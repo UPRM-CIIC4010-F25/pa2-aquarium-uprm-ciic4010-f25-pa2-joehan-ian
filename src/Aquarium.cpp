@@ -1,5 +1,39 @@
 #include "Aquarium.h"
 #include <cstdlib>
+#include <cmath>
+
+
+
+static inline float sqr(float v){ return pow(v,2); }
+
+static bool overlaps(const std::shared_ptr<Creature>& a, const std::shared_ptr<Creature>& b){ // Add to joehan: Detects if two creatures are currently touching
+    if (!a || !b) return false;
+    float dx = b->getX() - a->getX();
+    float dy = b->getY() - a->getY();
+    float r  = a->getCollisionRadius() + b->getCollisionRadius();
+    const float dist2 = pow(dx,2) + pow(dy,2);
+    return dist2 <= pow(r,2);
+}
+
+static void separate(Creature& A, Creature& B){ // Add to Joehan: Separates creatures that are touching each other
+    float ax = A.getX(), ay = A.getY();
+    float bx = B.getX(), by = B.getY();
+    float dx = bx - ax, dy = by - ay;
+    float d2 = pow(dx,2) + pow(dy,2);
+    if (d2 <= 0.0001f){ dx = 1.f; dy = 0.f; d2 = 1.f; }
+    float d = sqrt(d2);
+
+    float rSum = A.getCollisionRadius() + B.getCollisionRadius();
+    if (d >= rSum) return;
+
+    float pen = rSum - d;
+    float nx = dx / d, ny = dy / d;
+
+    float corr = 0.5f * pen; // mitad para cada uno
+    A.setPosition(ax - nx * corr, ay - ny * corr);
+    B.setPosition(bx + nx * corr, by + ny * corr);
+
+}
 
 
 string AquariumCreatureTypeToString(AquariumCreatureType t){
@@ -309,7 +343,17 @@ void AquariumGameScene::Update(){
                 ofLogError() << "Error: creatureB is null in collision event." << std::endl;
             }
         }
+       // Add by Joehan: Update player and aquarium status and handle collisions
+        this->m_player->update();
         this->m_aquarium->update();
+      
+        for (int i = 0; i < this->m_aquarium->getCreatureCount(); ++i){ 
+            auto NPC = this->m_aquarium->getCreatureAt(i);
+            if (NPC && overlaps(this->m_player, NPC)){
+                separate(*this->m_player, *NPC);
+        }
+        }
+
     }
 
 }

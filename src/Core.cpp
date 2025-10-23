@@ -11,9 +11,32 @@ void Creature::normalize() {
     }
 }
 
-void Creature::bounce() {
-    // should implement boundary controls here
-}
+void Creature::bounce() {  // Add by Joehan: This function makes the fish always stay inside the pond and that it
+
+    const float r   = m_collisionRadius; 
+
+if (m_y < r) {
+      m_y = r;        
+       m_dy = fabs(m_dy); 
+    }
+ else if (m_y > m_height - r) {
+       m_y = m_height - r;
+       m_dy = -fabs(m_dy);
+        }
+
+    if (m_x < r)  {
+         m_x = r;             
+         m_dx = fabs(m_dx); 
+        }
+    else if (m_x > m_width - r) {
+          m_x = m_width - r; 
+          m_dx = -fabs(m_dx); 
+        }
+
+    
+    }
+
+
 
 
 void GameEvent::print() const {
@@ -47,17 +70,33 @@ void GameEvent::print() const {
 };
 
 // collision detection between two creatures
-bool checkCollision(std::shared_ptr<Creature> a, std::shared_ptr<Creature> b) {
-    return false; 
+bool checkCollision(std::shared_ptr<Creature> a, std::shared_ptr<Creature> b) { //Add to Joehan: collision detection between two creatures
+
+    if (!a || !b) return false;
+
+    const float dx = b->getX() - a->getX();
+    const float dy = b->getY() - a->getY();
+    const float r  = a->getCollisionRadius() + b->getCollisionRadius();
+
+  
+    const float dist2 = pow(dx,2) + pow(dy, 2);
+    return dist2 <= pow(r,2);
+
 };
 
 
 string GameSceneKindToString(GameSceneKind t){
     switch(t)
     {
-        case GameSceneKind::GAME_INTRO: return "GAME_INTRO";
-        case GameSceneKind::AQUARIUM_GAME: return "AQUARIUM_GAME";
-        case GameSceneKind::GAME_OVER: return "GAME_OVER";
+        case GameSceneKind::GAME_INTRO:
+            return "GAME_INTRO";
+        case GameSceneKind::AQUARIUM_GAME:
+            return "AQUARIUM_GAME";
+        case GameSceneKind::GAME_OVER:
+            return "GAME_OVER";
+        default:
+            return "UNKNOWN_SCENE";
+
     };
 };
 
