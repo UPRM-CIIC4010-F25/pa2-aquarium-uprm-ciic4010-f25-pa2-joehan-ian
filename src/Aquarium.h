@@ -10,7 +10,8 @@
 enum class AquariumCreatureType {
     NPCreature,
     BiggerFish,
-    AngryFish
+    AngryFish,
+    PinkFish
 };
 
 string AquariumCreatureTypeToString(AquariumCreatureType t);
@@ -104,6 +105,21 @@ private:
     std::shared_ptr<PlayerCreature> target;
 };
 
+class PinkFish : public NPCreature {
+public:
+    PinkFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite);
+    void move() override;
+    void draw() const override;
+    void setThreat(std::shared_ptr<PlayerCreature> player) { threat = player; }
+private:
+    std::shared_ptr<PlayerCreature> threat;
+    int alertRadius = 150;
+    bool alerted = false;
+
+    std::shared_ptr<GameSprite> normalSprite = std::make_shared<GameSprite>("pink-fish.png", 50,50);
+    std::shared_ptr<GameSprite> scaredSprite = std::make_shared<GameSprite>("pink-fish-scared.png", 50,50);
+};
+
 class AquariumSpriteManager {
     public:
         AquariumSpriteManager();
@@ -113,6 +129,7 @@ class AquariumSpriteManager {
         std::shared_ptr<GameSprite> m_npc_fish;
         std::shared_ptr<GameSprite> m_big_fish;
         std::shared_ptr<GameSprite> m_angry_fish;
+        std::shared_ptr<GameSprite> m_pink_fish;
 };
 
 

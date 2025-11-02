@@ -42,6 +42,10 @@ string AquariumCreatureTypeToString(AquariumCreatureType t){
             return "BiggerFish";
         case AquariumCreatureType::NPCreature:
             return "BaseFish";
+        case AquariumCreatureType::AngryFish:
+            return "AngryFish";
+        case AquariumCreatureType::PinkFish:
+            return "PinkFish";
         default:
             return "UknownFish";
     }
@@ -166,8 +170,6 @@ void BiggerFish::draw() const {
 }
 
 AngryFish::AngryFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite) : NPCreature(x, y, speed, sprite){
-    // m_dx = (rand() % 3 - 1);
-    // m_dy = (rand() % 3 - 1);
     normalize();
 
     m_value = 3; //easier to get rid of than bigger fish but should require a power up
@@ -211,11 +213,72 @@ void AngryFish::draw() const{
     this->m_sprite->draw(this->m_x, this->m_y);
 }
 
+PinkFish::PinkFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite) : NPCreature(x, y, speed, sprite){
+    //start off in random direction
+    m_dx = (rand() % 3 - 1);
+    m_dy = (rand() % 3 - 1);
+    normalize();
+
+    m_creatureType = AquariumCreatureType::PinkFish;
+}
+
+void PinkFish::move(){
+    //is the player close enough to be alerted?
+    if ((abs(threat->getX() - this->getX()) < alertRadius) && (abs(threat->getY() - this->getY()) < alertRadius)){
+        alerted = true;
+        this->setSprite(scaredSprite);
+    } else {
+        alerted = false;
+        this->setSprite(normalSprite);
+    }
+    
+    if (!alerted){
+        m_x += m_dx * m_speed; //leisurely pace, just casually swimming
+        m_y += m_dy * m_speed;
+    } else { //is alerted
+        //figure out which direction to go
+        if (threat->getX() < this->getX()){
+            m_dx = 1;
+        } else if (threat->getX() > this->getX()){
+            m_dx = -1;
+        } else {
+            m_dx = 0;
+        }
+        //faces player direction on y
+        if (threat->getY() < this->getY()){
+            m_dy = 1;
+        } else if (threat->getY() > this->getY()){
+            m_dy = -1;
+        } else {
+            m_dy = 0;
+        }
+
+        m_x += m_dx * (m_speed * 1.5); //speeds up when it sees player
+        m_y += m_dy * (m_speed * 1.5);
+    }
+
+    //faces the sprite to the direction that it is facing behind the scenes
+    if(m_dx < 0 ){
+        this->m_sprite->setFlipped(true);
+    }else {
+        this->m_sprite->setFlipped(false);
+    }
+    
+    bounce();
+}
+
+void PinkFish::draw() const{
+    ofLogVerbose() << "PinkFish at (" << m_x << ", " << m_y << ") with speed " << m_speed << std::endl;
+    this->m_sprite->draw(this->m_x, this->m_y);
+}
+
+
 // AquariumSpriteManager
 AquariumSpriteManager::AquariumSpriteManager(){
     this->m_npc_fish = std::make_shared<GameSprite>("base-fish.png", 70,70);
     this->m_big_fish = std::make_shared<GameSprite>("bigger-fish.png", 120, 120);
     this->m_angry_fish = std::make_shared<GameSprite>("angry-fish.png", 70, 70);
+    this->m_pink_fish = std::make_shared<GameSprite>("pink-fish.png", 50,50);
 }
 
 std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureType t){
@@ -228,6 +291,10 @@ std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureTyp
 
         case AquariumCreatureType::AngryFish:
             return std::make_shared<GameSprite>(*this->m_angry_fish);
+
+        case AquariumCreatureType::PinkFish:
+            return std::make_shared<GameSprite>(*this->m_pink_fish);
+
         default:
             return nullptr;
     }
@@ -307,6 +374,13 @@ void Aquarium::SpawnCreature(AquariumCreatureType type) {
             std::shared_ptr<AngryFish> angryFishCreature = std::make_shared<AngryFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::AngryFish));
             angryFishCreature -> setTarget(m_player);
             this->addCreature(angryFishCreature);
+            break;
+        }
+        case AquariumCreatureType::PinkFish:{
+            if (speed < 10) { speed = 10;} //needs to have a base speed thats at least kind of fast
+            std::shared_ptr<PinkFish> pinkFish = std::make_shared<PinkFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::PinkFish));
+            pinkFish -> setThreat(m_player);
+            this->addCreature(pinkFish);
             break;
         }
         default:
