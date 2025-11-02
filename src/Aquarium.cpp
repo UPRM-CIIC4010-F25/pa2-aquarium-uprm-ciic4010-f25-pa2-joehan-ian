@@ -165,11 +165,57 @@ void BiggerFish::draw() const {
     this->m_sprite->draw(this->m_x, this->m_y);
 }
 
+AngryFish::AngryFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite) : NPCreature(x, y, speed, sprite){
+    // m_dx = (rand() % 3 - 1);
+    // m_dy = (rand() % 3 - 1);
+    normalize();
+
+    m_value = 3; //easier to get rid of than bigger fish but should require a power up
+    m_creatureType = AquariumCreatureType::AngryFish;
+}
+
+void AngryFish::move(){ //follow player but at slower speed than player moves
+    //faces player direction on x
+    if (target->getX() < this->getX()){
+        m_dx = -1;
+    } else if (target->getX() > this->getX()){
+        m_dx = 1;
+    } else {
+        m_dx = 0;
+    }
+    //faces player direction on y
+    if (target->getY() < this->getY()){
+        m_dy = -1;
+    } else if (target->getY() > this->getY()){
+        m_dy = 1;
+    } else {
+        m_dy = 0;
+    }
+
+    //actually moves toward player at 0.75 speed
+    m_x += m_dx * (m_speed * 0.75);
+    m_y += m_dy * (m_speed * 0.75);
+
+    //faces the sprite to the direction that it is facing behind the scenes
+    if(m_dx < 0 ){
+        this->m_sprite->setFlipped(true);
+    }else {
+        this->m_sprite->setFlipped(false);
+    }
+    
+    bounce();
+}
+
+void AngryFish::draw() const{
+    ofLogVerbose() << "AngryFish at (" << m_x << ", " << m_y << ") with speed " << m_speed << std::endl;
+    this->m_sprite->draw(this->m_x, this->m_y);
+}
 
 // AquariumSpriteManager
 AquariumSpriteManager::AquariumSpriteManager(){
     this->m_npc_fish = std::make_shared<GameSprite>("base-fish.png", 70,70);
     this->m_big_fish = std::make_shared<GameSprite>("bigger-fish.png", 120, 120);
+    this->m_angry_fish = std::make_shared<GameSprite>("angry-fish.png", 70, 70);
 }
 
 std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureType t){
@@ -179,6 +225,9 @@ std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureTyp
             
         case AquariumCreatureType::NPCreature:
             return std::make_shared<GameSprite>(*this->m_npc_fish);
+
+        case AquariumCreatureType::AngryFish:
+            return std::make_shared<GameSprite>(*this->m_angry_fish);
         default:
             return nullptr;
     }
@@ -186,9 +235,10 @@ std::shared_ptr<GameSprite> AquariumSpriteManager::GetSprite(AquariumCreatureTyp
 
 
 // Aquarium Implementation
-Aquarium::Aquarium(int width, int height, std::shared_ptr<AquariumSpriteManager> spriteManager)
+Aquarium::Aquarium(int width, int height, std::shared_ptr<PlayerCreature> player, std::shared_ptr<AquariumSpriteManager> spriteManager)
     : m_width(width), m_height(height) {
         m_sprite_manager =  spriteManager;
+        m_player = player;
     }
 
 
@@ -253,6 +303,12 @@ void Aquarium::SpawnCreature(AquariumCreatureType type) {
         case AquariumCreatureType::BiggerFish:
             this->addCreature(std::make_shared<BiggerFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::BiggerFish)));
             break;
+        case AquariumCreatureType::AngryFish:{
+            std::shared_ptr<AngryFish> angryFishCreature = std::make_shared<AngryFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::AngryFish));
+            angryFishCreature -> setTarget(m_player);
+            this->addCreature(angryFishCreature);
+            break;
+        }
         default:
             ofLogError() << "Unknown creature type to spawn!";
             break;

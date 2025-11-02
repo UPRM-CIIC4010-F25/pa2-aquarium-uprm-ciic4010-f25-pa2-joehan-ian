@@ -9,7 +9,8 @@
 
 enum class AquariumCreatureType {
     NPCreature,
-    BiggerFish
+    BiggerFish,
+    AngryFish
 };
 
 string AquariumCreatureTypeToString(AquariumCreatureType t);
@@ -93,6 +94,15 @@ public:
     void draw() const override;
 };
 
+class AngryFish : public NPCreature {
+public:
+    AngryFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite);
+    void move() override;
+    void draw() const override;
+    void setTarget(std::shared_ptr<PlayerCreature> player) { target = player; }
+private:
+    std::shared_ptr<PlayerCreature> target;
+};
 
 class AquariumSpriteManager {
     public:
@@ -102,12 +112,13 @@ class AquariumSpriteManager {
     private:
         std::shared_ptr<GameSprite> m_npc_fish;
         std::shared_ptr<GameSprite> m_big_fish;
+        std::shared_ptr<GameSprite> m_angry_fish;
 };
 
 
 class Aquarium{
 public:
-    Aquarium(int width, int height, std::shared_ptr<AquariumSpriteManager> spriteManager);
+    Aquarium(int width, int height, std::shared_ptr<PlayerCreature> player, std::shared_ptr<AquariumSpriteManager> spriteManager);
     void addCreature(std::shared_ptr<Creature> creature);
     void addAquariumLevel(std::shared_ptr<AquariumLevel> level);
     void removeCreature(std::shared_ptr<Creature> creature);
@@ -134,6 +145,7 @@ private:
     std::vector<std::shared_ptr<Creature>> m_next_creatures;
     std::vector<std::shared_ptr<AquariumLevel>> m_aquariumlevels;
     std::shared_ptr<AquariumSpriteManager> m_sprite_manager;
+    std::shared_ptr<PlayerCreature> m_player;
 };
 
 
@@ -165,7 +177,6 @@ class Level_0 : public AquariumLevel  {
     public:
         Level_0(int levelNumber, int targetScore): AquariumLevel(levelNumber, targetScore){
             this->m_levelPopulation.push_back(std::make_shared<AquariumLevelPopulationNode>(AquariumCreatureType::NPCreature, 10));
-
         };
         std::vector<AquariumCreatureType> Repopulate() override;
 

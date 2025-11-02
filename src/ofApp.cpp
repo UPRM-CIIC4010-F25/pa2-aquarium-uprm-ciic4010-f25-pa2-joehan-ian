@@ -32,8 +32,8 @@ void ofApp::setup(){
     spriteManager = std::make_shared<AquariumSpriteManager>();
 
     // Lets setup the aquarium
-    myAquarium = std::make_shared<Aquarium>(ofGetWindowWidth(), ofGetWindowHeight(), spriteManager);
     player = std::make_shared<PlayerCreature>(ofGetWindowWidth()/2 - 50, ofGetWindowHeight()/2 - 50, DEFAULT_SPEED, this->spriteManager->GetSprite(AquariumCreatureType::NPCreature));
+    myAquarium = std::make_shared<Aquarium>(ofGetWindowWidth(), ofGetWindowHeight(), player, spriteManager);
     player->setDirection(0, 0); // Initially stationary
     player->setBounds(ofGetWindowWidth() - 20, ofGetWindowHeight() - 20);
 
