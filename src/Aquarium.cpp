@@ -172,7 +172,7 @@ void BiggerFish::draw() const {
 AngryFish::AngryFish(float x, float y, int speed, std::shared_ptr<GameSprite> sprite) : NPCreature(x, y, speed, sprite){
     normalize();
 
-    m_value = 3; //easier to get rid of than bigger fish but should require a power up
+    m_value = 5;
     m_creatureType = AquariumCreatureType::AngryFish;
 }
 
@@ -371,6 +371,7 @@ void Aquarium::SpawnCreature(AquariumCreatureType type) {
             this->addCreature(std::make_shared<BiggerFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::BiggerFish)));
             break;
         case AquariumCreatureType::AngryFish:{
+            if (speed < 10) { speed = 10;}
             std::shared_ptr<AngryFish> angryFishCreature = std::make_shared<AngryFish>(x, y, speed, this->m_sprite_manager->GetSprite(AquariumCreatureType::AngryFish));
             angryFishCreature -> setTarget(m_player);
             this->addCreature(angryFishCreature);
