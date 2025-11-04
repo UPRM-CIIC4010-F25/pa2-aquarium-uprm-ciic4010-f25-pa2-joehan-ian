@@ -151,6 +151,7 @@ public:
     int getCreatureCount() const { return m_creatures.size(); }
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
+    int getCurrentLevelIdx() const { return currentLevel % m_aquariumlevels.size();}
 
 
 private:
@@ -187,6 +188,20 @@ class AquariumGameScene : public GameScene {
         std::shared_ptr<GameEvent> m_lastEvent;
         string m_name;
         AwaitFrames updateControl{5};
+         bool powerActive = false;  // Variables with "power" refer to the speed power-up system.
+        float powerX = 0.0f, powerY = 0.0f; // its position, duration, activation, and how much it boosts the player's speed.
+         int   powerRadius = 16;
+         int   powerBoost = 8;
+         int   powerDurationFrames = 5*60;
+         int   powerBoostFramesLeft = 0;
+         int   playerBaseSpeed = 0;
+         AwaitFrames powerSpawner{600};
+
+         bool  strengthActive = false; // Variables with "strength" refer to the strength power-up system,
+        float strengthX = 0.0f, strengthY = 0.0f; // which increases the player's power level permanently.
+        int   strengthRadius = 16;        
+        int   strengthAmount = 1;        
+        AwaitFrames strengthSpawner{900}; 
 };
 
 
