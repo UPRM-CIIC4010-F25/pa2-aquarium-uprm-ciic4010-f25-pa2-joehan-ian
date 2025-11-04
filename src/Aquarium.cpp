@@ -49,7 +49,7 @@ string AquariumCreatureTypeToString(AquariumCreatureType t){
 
 // PlayerCreature Implementation
 PlayerCreature::PlayerCreature(float x, float y, int speed, std::shared_ptr<GameSprite> sprite)
-: Creature(x, y, speed, 10.0f, 1, sprite) {}
+: Creature(x, y, speed, 32.0f, 1, sprite) {}
 
 
 void PlayerCreature::setDirection(float dx, float dy) {
@@ -310,8 +310,36 @@ std::shared_ptr<GameEvent> DetectAquariumCollisions(std::shared_ptr<Aquarium> aq
 
 void AquariumGameScene::Update(){
     std::shared_ptr<GameEvent> event;
+    int powerDurationFrames = 5 * 60;
 
     this->m_player->update();
+
+     if (playerBaseSpeed == 0) {
+        playerBaseSpeed = m_player->getSpeed(); // save original speed once
+    }
+
+    if (this->m_aquarium->getCurrentLevelIdx() >= 1) {
+    // Power-up Green (speed)
+    if (!powerActive && powerSpawner.tick()) {
+        powerX = ofRandom(50, this->m_aquarium->getWidth()  - 50);
+        powerY = ofRandom(50, this->m_aquarium->getHeight() - 50);
+        powerActive = true;
+    }
+
+    // Power-up Blue (power)
+    if (!strengthActive && strengthSpawner.tick()) {
+        strengthX = ofRandom(50, this->m_aquarium->getWidth()  - 50);
+        strengthY = ofRandom(50, this->m_aquarium->getHeight() - 50);
+        strengthActive = true;
+    }
+}
+
+    if (powerBoostFramesLeft > 0) {
+    powerBoostFramesLeft--;  // Decrease the frame counter by 1 every update
+    if (powerBoostFramesLeft == 0) {
+        m_player->setSpeed(playerBaseSpeed);  // volver a velocidad normal
+    }
+}
 
     if (this->updateControl.tick()) {
         event = DetectAquariumCollisions(this->m_aquarium, this->m_player);
@@ -356,6 +384,36 @@ void AquariumGameScene::Update(){
 
     }
 
+   bool pickedAnyThisFrame = false;
+
+// 1) Amarillo (velocidad) — se evalúa primero
+if (!pickedAnyThisFrame && powerActive) {
+    const float dx = powerX - m_player->getX();
+    const float dy = powerY - m_player->getY();
+    const float r  = powerRadius + m_player->getCollisionRadius();
+    if (dx*dx + dy*dy <= r*r) {
+        powerActive = false;
+        powerBoostFramesLeft = powerDurationFrames;   // ej. 5*60
+        m_player->setSpeed(playerBaseSpeed + powerBoost);
+        ofLogNotice() << "[PU] Speed boost +" << powerBoost
+                      << " por " << (powerDurationFrames/60.0f) << "s";
+        pickedAnyThisFrame = true; // ← evita que el azul se active en este frame
+    }
+}
+
+// 2) Azul (poder) — solo si el amarillo NO se activó en este frame
+if (!pickedAnyThisFrame && strengthActive) {
+    const float dx = strengthX - m_player->getX();
+    const float dy = strengthY - m_player->getY();
+    const float r  = strengthRadius + m_player->getCollisionRadius();
+    if (dx*dx + dy*dy <= r*r) {
+        strengthActive = false;
+        m_player->increasePower(strengthAmount);  // permanente
+        ofLogNotice() << "[PU] Power +" << strengthAmount
+                      << " (power actual: " << m_player->getPower() << ")";
+        pickedAnyThisFrame = true;
+    }
+}
 }
 
 void AquariumGameScene::Draw() {
@@ -363,6 +421,21 @@ void AquariumGameScene::Draw() {
     this->m_aquarium->draw();
     this->paintAquariumHUD();
 
+ if (powerActive) {
+    ofPushStyle();
+    ofSetColor(0, 200, 83);                // verde para velocidad
+    ofDrawCircle(powerX, powerY, powerRadius);
+    ofSetColor(ofColor::white);            // reset color
+    ofPopStyle();
+}
+
+if (strengthActive) {
+    ofPushStyle();
+    ofSetColor(0, 200, 255);               // cian para poder
+    ofDrawCircle(strengthX, strengthY, strengthRadius);
+    ofSetColor(ofColor::white);            // reset color
+    ofPopStyle();
+}
 }
 
 
